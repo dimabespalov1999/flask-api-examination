@@ -33,7 +33,7 @@ flask-api-exam/
 - Docker Compose
 - Python (опционально, для flake8 и тестов)
 
-### 2. Склонируйте проект:
+### 2. Скопируйте проект:
 ```bash
 git clone https://github.com/dimabespalov1999/flask-api-exam.git
 cd flask-api-exam
