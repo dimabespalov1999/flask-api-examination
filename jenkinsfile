@@ -43,12 +43,12 @@ pipeline {
 
         stage('Запуск тестов') {
             steps {
-                sh '''
+                 sh '''
                     . $VENV_DIR/bin/activate
-                    export PYTHONPATH=$(pwd)
+                    export PYTHONPATH=$PYTHONPATH:$(pwd)
 
-                    echo "Запуск unit-тестов..."
-                    pytest
+                    echo "Запуск тестов..."
+                    pytest tests/ || exit 1
                 '''
             }
         }
