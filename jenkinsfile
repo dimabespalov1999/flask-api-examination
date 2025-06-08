@@ -1,0 +1,152 @@
+// pipeline {
+//     agent any
+//
+//     environment {
+//         COMPOSE_FILE = 'docker-compose.yml'
+//         VENV_DIR = 'venv'
+//     }
+//
+//     stages {
+//         stage('Checkout') {
+//             steps {
+//                 git branch: 'master', url: 'https://github.com/dimabespalov1999/flask_app_exam.git'
+//             }
+//         }
+//
+//         stage('Set up Python Environment') {
+//             steps {
+//                 sh '''
+//                     apt update
+//                     apt install -y python3.11-venv python3-pip
+//                     python3 -m venv $VENV_DIR
+//                     . $VENV_DIR/bin/activate
+//                     pip install --upgrade pip
+//                     pip install flake8 autopep8 pytest
+//                 '''
+//             }
+//         }
+//
+//         stage('Lint and Auto-fix') {
+//             steps {
+//                 sh '''
+//                     . $VENV_DIR/bin/activate
+//                     export PYTHONPATH=$PYTHONPATH:$(pwd)
+//
+//                     echo "Автоисправление кода с помощью autopep8..."
+//                     autopep8 --in-place --recursive app
+//
+//                     echo "🔍 Проверка стиля кода с flake8..."
+//                     flake8 app || echo "тиль кода нарушен, но пайплайн не остановлен"
+//                 '''
+//             }
+//         }
+//
+//         stage('Run Tests') {
+//             steps {
+//                 sh '''
+//                     . $VENV_DIR/bin/activate
+//                     export PYTHONPATH=$PYTHONPATH:$(pwd)
+//
+//                     echo "Запуск тестов..."
+//                     pytest tests/ || exit 1
+//                 '''
+//             }
+//         }
+//
+//         stage('Build and Deploy') {
+//             steps {
+//                 echo 'Сборка и запуск контейнеров...'
+//                 sh 'docker-compose down || true'
+//                 sh 'docker-compose --env-file .env up -d --build'
+//             }
+//         }
+//     }
+//
+//     post {
+//         failure {
+//             echo '❌ Сборка завершилась с ошибкой.'
+//         }
+//         success {
+//             echo 'Приложение успешно развернуто.'
+//         }
+//     }
+// }
+
+
+pipeline {
+    agent any
+
+    environment {
+        COMPOSE_FILE = 'docker-compose.yml'
+        VENV_DIR = 'venv'
+        ENV_FILE = '.env'
+    }
+
+    stages {
+        stage('Загрузка кода из репозитория') {
+            steps {
+                git branch: 'master', url: 'https://github.com/dimabespalov1999/flask_app_exam.git'
+            }
+        }
+
+        stage('Установка Python-окружения') {
+            steps {
+                sh '''
+                    apt update && apt install -y python3.11-venv python3-pip
+                    python3 -m venv $VENV_DIR
+                    . $VENV_DIR/bin/activate
+                    pip install --upgrade pip
+                    pip install flake8 autopep8 pytest
+                '''
+            }
+        }
+
+        stage('Проверка и автоисправление стиля кода') {
+            steps {
+                sh '''
+                    . $VENV_DIR/bin/activate
+                    export PYTHONPATH=$(pwd)
+
+                    echo "Автоисправление с помощью autopep8..."
+                    autopep8 --in-place --recursive app
+
+                    echo "Проверка стиля кода с помощью flake8..."
+                    flake8 app || echo "Найдены предупреждения flake8, но пайплайн продолжается"
+                '''
+            }
+        }
+
+        stage('Запуск тестов') {
+            steps {
+                sh '''
+                    . $VENV_DIR/bin/activate
+                    export PYTHONPATH=$(pwd)
+
+                    echo "Запуск unit-тестов..."
+                    pytest tests/
+                '''
+            }
+        }
+
+        stage('Сборка и развертывание контейнеров') {
+            steps {
+                sh '''
+                    echo "Остановка работающих контейнеров (если есть)..."
+                    docker-compose down || true
+
+                    echo "Сборка и запуск контейнеров..."
+                    docker-compose --env-file $ENV_FILE up -d --build
+                '''
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo 'Сборка завершилась с ошибкой. Проверьте логи.'
+        }
+        success {
+            echo 'Приложение успешно собрано и запущено.'
+        }
+    }
+}
