@@ -48,7 +48,7 @@ pipeline {
                     export PYTHONPATH=$(pwd)
 
                     echo "Запуск unit-тестов..."
-                    pytest tests/
+                    pytest
                 '''
             }
         }
