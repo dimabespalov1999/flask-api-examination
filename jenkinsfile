@@ -62,7 +62,9 @@ pipeline {
             steps {
                 sh '''
                     echo "Остановка работающих контейнеров (если есть)..."
-                    docker-compose down || true
+
+
+                    docker-compose down -v || true
 
                     echo "Сборка и запуск контейнеров..."
                     docker-compose --env-file $ENV_FILE up -d --build
