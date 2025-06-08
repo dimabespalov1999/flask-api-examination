@@ -16,8 +16,9 @@ pipeline {
 
         stage('Установка Python-окружения') {
             steps {
-                sh '''
-                    apt update && apt install -y python3.11-venv python3-pip
+                 sh '''
+                    apt update
+                    apt install -y python3.11-venv python3-pip
                     python3 -m venv $VENV_DIR
                     . $VENV_DIR/bin/activate
                     pip install --upgrade pip
