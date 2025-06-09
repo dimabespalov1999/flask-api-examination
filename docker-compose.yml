@@ -10,12 +10,12 @@ services:
       - .env
     depends_on:
       - db
-  test:
-    image: python:3.10-slim
-    volumes:
-      - .:/flask_api_exam
-    working_dir: /flask_api_exam
-    command: sh -c "pip install -r requirements.txt"
+#  test:
+#    image: python:3.10-slim
+#    volumes:
+#      - .:/flask_api_exam
+#    working_dir: /flask_api_exam
+#    command: sh -c "pip install -r requirements.txt && pytest tests"
 
 
   db:
