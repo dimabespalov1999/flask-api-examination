@@ -15,7 +15,7 @@ services:
     volumes:
       - .:/flask_api_exam
     working_dir: /flask_api_exam
-    command: sh -c "pip install -r requirements.txt && pytest tests"
+    command: sh -c "pip install -r requirements.txt"
 
 
   db:
