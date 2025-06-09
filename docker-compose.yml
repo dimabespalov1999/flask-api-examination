@@ -1,3 +1,41 @@
+#
+#services:
+#  web:
+#    build: .
+#    ports:
+#      - "5000:5000"
+#    volumes:
+#      - .:/flask_api_exam
+#    env_file:
+#      - .env
+#    depends_on:
+#      - db
+##  test:
+##    image: python:3.10-slim
+##    volumes:
+##      - .:/flask_api_exam
+##    working_dir: /flask_api_exam
+##    command: sh -c "pip install -r requirements.txt && pytest tests"
+#
+#
+#  db:
+#    image: postgres:15
+#    environment:
+#      POSTGRES_USER: ${POSTGRES_USER}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#      POSTGRES_DB: ${POSTGRES_DB}
+#    ports:
+#          - "${POSTGRES_PORT}:5432"
+#    volumes:
+#      - pgdata:/var/lib/postgresql/data
+#    healthcheck:
+#      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+#      interval: 5s
+#      timeout: 5s
+#      retries: 10
+#
+#volumes:
+#  pgdata:
 
 services:
   web:
@@ -5,18 +43,25 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - .:/flask_api_exam
+      - .:/flask_api_exam:ro
     env_file:
       - .env
     depends_on:
-      - db
-#  test:
-#    image: python:3.10-slim
-#    volumes:
-#      - .:/flask_api_exam
-#    working_dir: /flask_api_exam
-#    command: sh -c "pip install -r requirements.txt && pytest tests"
-
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    networks:
+      - backend
 
   db:
     image: postgres:15
@@ -25,14 +70,28 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-          - "${POSTGRES_PORT}:5432"
+      - "127.0.0.1:${POSTGRES_PORT}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    # read_only отключён!
+    networks:
+      - backend
 
 volumes:
   pgdata:
+
+networks:
+  backend:
+    driver: bridge
+
+
